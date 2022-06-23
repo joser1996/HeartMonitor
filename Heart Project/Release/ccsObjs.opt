@@ -1,0 +1,1 @@
+"./Adafruit_GFX.obj" "./Adafruit_OLED.obj" "./algorithm.obj" "./i2c_if.obj" "./main.obj" "./max30102.obj" "./pinmux.obj" "./startup_ccs.obj" "./test.obj" "./uart_if.obj" "../cc3200v1p32.cmd" -llibc.a -ldriverlib.a 
