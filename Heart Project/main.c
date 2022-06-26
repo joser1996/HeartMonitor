@@ -417,7 +417,6 @@ void initMaster(void)
         return -1;
         //Message("Error Reseting the device \n\r");
 
-    //Clears INT status, but we don't use INT so  maybe we don't need it
     if(maxim_max30102_read_reg(REG_INTR_STATUS_1, &uch_dummy) != 0)
         return -1;
         //Message("Error clearing INT status reg\n\r");
@@ -460,10 +459,11 @@ void main()
     drawHeaders();
     SPIDisable(GSPI_BASE);
 
+    //wait until interrup asserts
     while (!GPIOPinRead(GPIOA2_BASE,0x40)) {
         continue;
     }
-
+    //Main Loop
     while(1){
 
         un_brightness = 0;
