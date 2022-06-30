@@ -35,8 +35,6 @@
 #include "Adafruit_SSD1351.h"
 
 
-//OUR headers
-//#include "heartOLED.h"
 
 //GLOBAL VARIABLES -- Start
 int warning = 0;
@@ -136,6 +134,8 @@ BoardInit(void)
 
     PRCMCC3200MCUInit();
 }
+
+
 void drawHeaders()
 {
     int xc = 20;
@@ -149,15 +149,9 @@ void drawHeaders()
         drawChar(xc, 20, hr[k], WHITE, BLACK, 2);
         xc += 12;
     }
-//    xc = 90;
-//    for(k = 0; k < 2; ++k){
-//        drawChar(xc, 20, Ox[k], WHITE, BLACK, 2);
-//        xc += 12;
-//    }
+    
     SPIDisable(GSPI_BASE);
 }
-
-
 
 
 void displayHeartInfo(int hr, int ox){
@@ -172,15 +166,7 @@ void displayHeartInfo(int hr, int ox){
         xcur += 12;
         sb++;
     }
-//    sb = 0;
-//    xcur = 90;
-//
-//    sprintf(numBuf, "%d", ox);
-//    while(numBuf[sb] != '\0'){
-//        drawChar(xcur, ycur, numBuf[sb], WHITE, BLACK, 2);
-//        xcur += 12;
-//        sb++;
-//    }
+
     sb = 0;
     xcur = 20;
     delay(5);
@@ -190,7 +176,6 @@ void displayHeartInfo(int hr, int ox){
 
 
 int sendHR2UART() {
-   // Message("Here\r\n");
     int value;
     char value_bit[sizeof(int)];
     if (n_heart_rate == -999)
@@ -215,17 +200,18 @@ int sendHR2UART() {
         int i;
         int sum = 0;
         int send;
-        //Message("Here for\r\n");
-        for (i = 0; i < avgBufferSize; i++) {
+        
+	for (i = 0; i < avgBufferSize; i++) {
             sum += avgBuff[i];
         }
-        send =  sum / avgBufferSize;
+        
+	send =  sum / avgBufferSize;
         memcpy(value_bit,&value,sizeof(int));
-        //Message("Here after for\r\n");
-        for (i = 0; i < sizeof(int); i++) {
+        
+	for (i = 0; i < sizeof(int); i++) {
             UartPutChar(value_bit[i]);
         }
-        //Report("%d \n\r", send); //uncomment to test on TeraTerm
+        
         displayHeartInfo(send, 0);
 
         if (warning == maxWarning) {
@@ -240,9 +226,6 @@ int sendHR2UART() {
             warning = 0;
         }
 
-//        if(GPIOPinRead(GPIOA2_BASE,0x40)) {
-//            GPIOPinWrite(GPIOA3_BASE, 0x1, 0x0);
-//        }
 
     }
     return last;
@@ -314,8 +297,6 @@ void oledPrintState(enum state st){
 }
 
 void userPosition(){
-//    TimerIntDisable(TIMERA0_BASE, TIMER_TIMA_TIMEOUT);
-    //Message("In Handler");
 
     short int raw_x, raw_y;
     int conf= 0;
@@ -325,7 +306,6 @@ void userPosition(){
     while(done == 0){
         //get gyro. value
         collect_raw(&raw_x, &raw_y);
-        //Report("X: %hd, Y: %hd \n\r", raw_x, raw_y);
 
         if((raw_y >= 14) || (raw_y <= -14)){
             //Message("Standing \n\r");
@@ -340,7 +320,8 @@ void userPosition(){
             ;
         }
 
-        if(conf == 0){
+        //build confidence value
+	if(conf == 0){
             prevState = st;
             conf++;
         }
@@ -375,7 +356,7 @@ void timerInit(){
 
 void initMaster(void)
 {
-    //Some Init Stuffs
+    //Some Init Stuff
     BoardInit();
     PinMuxConfig();
     InitTerm();
@@ -406,8 +387,6 @@ void initMaster(void)
     fillScreen(BLACK);
     SPIDisable(GSPI_BASE);
 
-    //Initialize the timer
-    //timerInit();
 
     I2C_IF_Open(I2C_MASTER_MODE_FST);
 
@@ -439,9 +418,6 @@ void initMaster(void)
 //*****************************************************************************
 void main()
 {
-//    int iRetVal;
-//    char acCmdStore[512];
-//    unsigned char uchdummy;
     initMaster();
 
     unsigned int un_min, un_max, un_prev_data, un_brightness; //used to calculate LED brightness
@@ -484,7 +460,6 @@ void main()
             if(un_max < aun_red_buffer[i])
                 un_max = aun_red_buffer[i];
 
-            //Report("Red = %d \t , IR= %d\r\n",aun_red_buffer[i], aun_ir_buffer[i]);
 
         }//End for loop
 
@@ -492,9 +467,6 @@ void main()
 
         maxim_heart_rate_and_oxygen_saturation(aun_ir_buffer, n_ir_buffer_length, aun_red_buffer,
                                      &n_spo2, &ch_spo2_valid, &n_heart_rate, &ch_hr_valid);
-
-//        Report("Heart Rate: %d\n\r", n_heart_rate);
-//        Report("SPO2: %d\n\r", n_spo2);
 
 
         //Continuously taking samples from MAX30102.  Heart rate and SpO2 are calculated every 1 second
@@ -521,9 +493,7 @@ void main()
           for(i=75;i<100;i++)
           {
             un_prev_data=aun_red_buffer[i-1];
-            //Message("Enter\r\n");
             while(GPIOPinRead(GPIOA3_BASE, 0x40) ==  0x40);
-            //Message("Reading FIFO\r\n");
             maxim_max30102_read_fifo((aun_red_buffer+i), (aun_ir_buffer+i));
 
             //calculate the brightness of the LED
@@ -548,25 +518,9 @@ void main()
                 un_brightness=MAX_BRIGHTNESS;
             }
 
-            //Report("Red = %d \t , IR= %d\t",aun_red_buffer[i], aun_ir_buffer[i]); //format data ???
-
-            //Report(", HR= %d\t", n_heart_rate);
-            last = sendHR2UART(n_heart_rate);
-            ++counterState;
-            //get user state every 30 iterations
-            if(counterState == 30){
-                counterState = 0;
-                userPosition();
-            }
-            //Report(", HRvalid= %d\t", (int)ch_hr_valid);
-
-            //Report(", SPO2= %ld\t", n_spo2);
-
-            //Report(", SPO2Valid = %d\r\n", (int)ch_spo2_valid);
           }
           maxim_heart_rate_and_oxygen_saturation(aun_ir_buffer, n_ir_buffer_length, aun_red_buffer, &n_spo2, &ch_spo2_valid, &n_heart_rate, &ch_hr_valid);
-          //display heart info on OLED
-
+	  last = sendHR2UART(n_heart_rate);
         }//End of nested while loop
 
     }//End while loop
